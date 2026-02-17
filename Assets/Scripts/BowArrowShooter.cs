@@ -55,10 +55,8 @@ public class BowArrowShooter : MonoBehaviour
 
     float GetPull01()
     {
-        // Convert grab Z into bow local space
         float localZ = transform.InverseTransformPoint(stringGrabPoint.position).z;
 
-        // Normalize pull (0�1)
         return Mathf.Clamp01(Mathf.Abs(localZ / maxPullZ));
     }
 }
