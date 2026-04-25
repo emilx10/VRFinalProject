@@ -147,6 +147,9 @@ MonoBehaviour:
   glassLayer:
     serializedVersion: 2
     m_Bits: 128
+  magazineSize: 12
+  reloadTime: 1
+  fireInterval: 0.2
 --- !u!1 &134022659
 GameObject:
   m_ObjectHideFlags: 0

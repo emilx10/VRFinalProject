@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class GlassRaycaster : MonoBehaviour
@@ -8,14 +9,48 @@ public class GlassRaycaster : MonoBehaviour
     [SerializeField] private float rayRadius = 0.3f;
     [SerializeField] private LayerMask glassLayer;
 
+    [Header("Gun Settings")]
+    [SerializeField] private int magazineSize = 12;
+    [SerializeField] private float reloadTime = 2f;
+    [SerializeField] private float fireInterval = 0.2f; //  NEW
+
+    private int currentAmmo;
+    private bool isReloading = false;
+    private float nextFireTime = 0f; //  NEW
+
+    private void Start()
+    {
+        currentAmmo = magazineSize;
+    }
+
     public void ShootRay()
     {
+        //  Can't shoot while reloading
+        if (isReloading)
+            return;
+
+        //  Fire rate limit
+        if (Time.time < nextFireTime)
+            return;
+
+        //  No ammo  start reload
+        if (currentAmmo <= 0)
+        {
+            StartCoroutine(Reload());
+            return;
+        }
+
+        //  Set next allowed fire time
+        nextFireTime = Time.time + fireInterval;
+
+        //  Consume ammo
+        currentAmmo--;
+
         RaycastHit hit;
         Vector3 origin = rayOrigin.position;
         Vector3 direction = rayOrigin.forward;
         Vector3 halfExtents = new Vector3(rayRadius, rayRadius, 0.01f);
 
-        // Using BoxCast to make it easier to hit the notes
         if (Physics.BoxCast(
                 origin,
                 halfExtents,
@@ -26,12 +61,10 @@ public class GlassRaycaster : MonoBehaviour
                 glassLayer,
                 QueryTriggerInteraction.Collide))
         {
-            // Get the component
             ShootableNote note = hit.collider.GetComponent<ShootableNote>();
 
             if (note != null)
             {
-                // TryHit handles the success logic and returns true/false
                 bool hitSuccess = note.TryHit();
 
                 if (hitSuccess)
@@ -44,6 +77,21 @@ public class GlassRaycaster : MonoBehaviour
                 }
             }
         }
+
+        Debug.Log($"Ammo: {currentAmmo}/{magazineSize}");
+    }
+
+    private IEnumerator Reload()
+    {
+        isReloading = true;
+        Debug.Log("Reloading...");
+
+        yield return new WaitForSeconds(reloadTime);
+
+        currentAmmo = magazineSize;
+        isReloading = false;
+
+        Debug.Log("Reload Complete!");
     }
 
     private void OnDrawGizmos()
