@@ -4555,8 +4555,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AmmoTargetSpawner
   ammoPrefab: {fileID: 6700757132295539656, guid: cdb516543495bdc449afeeb9192330ae, type: 3}
   referenceCube: {fileID: 2098730930}
-  poolSize: 5
-  spawnInterval: 3
+  poolSize: 10
+  spawnInterval: 2
   targetLifetime: 2
   minZ: -5.9
   maxZ: 4.9
