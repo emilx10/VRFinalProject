@@ -14,6 +14,12 @@ public class GlassRaycaster : MonoBehaviour
     [SerializeField] private float reloadTime = 2f;
     [SerializeField] private float fireInterval = 0.2f;
 
+    [Header("Visual")]
+    [SerializeField] private LineRenderer lineRenderer;
+    [SerializeField] private Transform hitMarker; // optional small sphere / dot
+
+    [SerializeField] GameObject ghostObject;
+
     private int currentAmmo;
     private bool isReloading = false;
     private float nextFireTime = 0f;
@@ -21,6 +27,16 @@ public class GlassRaycaster : MonoBehaviour
     private void Start()
     {
         currentAmmo = magazineSize;
+
+        if (lineRenderer != null)
+        {
+            lineRenderer.positionCount = 2;
+        }
+    }
+
+    private void Update()
+    {
+        DrawAim(); // Always show where the gun is aiming
     }
 
     public void ShootRay()
@@ -31,7 +47,6 @@ public class GlassRaycaster : MonoBehaviour
         if (Time.time < nextFireTime)
             return;
 
-        // IMPORTANT: allow shooting even at 0 to hit ammo targets
         nextFireTime = Time.time + fireInterval;
 
         RaycastHit hit;
@@ -49,7 +64,7 @@ public class GlassRaycaster : MonoBehaviour
                 hitLayer,
                 QueryTriggerInteraction.Collide))
         {
-            //  PRIORITY: Ammo target
+            // PRIORITY: Ammo target
             AmmoTarget ammoTarget = hit.collider.GetComponent<AmmoTarget>();
             if (ammoTarget != null)
             {
@@ -58,7 +73,7 @@ public class GlassRaycaster : MonoBehaviour
                 return;
             }
 
-            //  Only consume ammo if NOT ammo target
+            // Only consume ammo if NOT ammo target
             if (currentAmmo <= 0)
             {
                 StartCoroutine(Reload());
@@ -66,6 +81,7 @@ public class GlassRaycaster : MonoBehaviour
             }
 
             currentAmmo--;
+            Destroy(ghostObject);
 
             ShootableNote note = hit.collider.GetComponent<ShootableNote>();
 
@@ -83,7 +99,64 @@ public class GlassRaycaster : MonoBehaviour
         Debug.Log($"Ammo: {currentAmmo}/{magazineSize}");
     }
 
-    //  ADD AMMO (CORE FIX)
+    //  VISUAL AIM SYSTEM
+    private void DrawAim()
+    {
+        if (rayOrigin == null || lineRenderer == null)
+            return;
+
+        Vector3 origin = rayOrigin.position;
+        Vector3 direction = rayOrigin.forward;
+        Vector3 halfExtents = new Vector3(rayRadius, rayRadius, 0.01f);
+
+        RaycastHit hit;
+        Vector3 endPoint;
+
+        if (Physics.BoxCast(
+                origin,
+                halfExtents,
+                direction,
+                out hit,
+                rayOrigin.rotation,
+                rayDistance,
+                hitLayer,
+                QueryTriggerInteraction.Collide))
+        {
+            endPoint = hit.point;
+
+            // Move hit marker
+            if (hitMarker != null)
+            {
+                hitMarker.position = hit.point;
+                hitMarker.gameObject.SetActive(true);
+            }
+
+            // Optional color feedback
+            AmmoTarget ammo = hit.collider.GetComponent<AmmoTarget>();
+            ShootableNote note = hit.collider.GetComponent<ShootableNote>();
+
+            if (ammo != null)
+                lineRenderer.material.color = Color.cyan;
+            else if (note != null)
+                lineRenderer.material.color = Color.green;
+            else
+                lineRenderer.material.color = Color.red;
+        }
+        else
+        {
+            endPoint = origin + direction * rayDistance;
+
+            if (hitMarker != null)
+                hitMarker.gameObject.SetActive(false);
+
+            lineRenderer.material.color = Color.red;
+        }
+
+        lineRenderer.SetPosition(0, origin);
+        lineRenderer.SetPosition(1, endPoint);
+    }
+
+    //  ADD AMMO
     public void AddAmmo(int amount)
     {
         if (isReloading)
@@ -110,6 +183,7 @@ public class GlassRaycaster : MonoBehaviour
     private void OnDrawGizmos()
     {
         if (rayOrigin == null) return;
+
         Gizmos.color = Color.red;
         Gizmos.DrawRay(rayOrigin.position, rayOrigin.forward * rayDistance);
     }
