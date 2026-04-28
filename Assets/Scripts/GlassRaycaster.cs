@@ -6,7 +6,7 @@ public class GlassRaycaster : MonoBehaviour
     [Header("Raycast Settings")]
     [SerializeField] private Transform rayOrigin;
     [SerializeField] private float rayDistance = 50f;
-    [SerializeField] private float rayRadius = 0.3f;
+    [SerializeField] private float rayRadius = 0.05f;
     [SerializeField] private LayerMask hitLayer; // include BOTH glass + ammo
 
     [Header("Gun Settings")]
@@ -64,6 +64,7 @@ public class GlassRaycaster : MonoBehaviour
                 hitLayer,
                 QueryTriggerInteraction.Collide))
         {
+            Debug.Log("Hit: " + hit.collider.name);
             // PRIORITY: Ammo target
             AmmoTarget ammoTarget = hit.collider.GetComponent<AmmoTarget>();
             if (ammoTarget != null)
@@ -83,7 +84,7 @@ public class GlassRaycaster : MonoBehaviour
             currentAmmo--;
             Destroy(ghostObject);
 
-            ShootableNote note = hit.collider.GetComponent<ShootableNote>();
+            ShootableNote note = hit.collider.GetComponentInParent<ShootableNote>();
 
             if (note != null)
             {

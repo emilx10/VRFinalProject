@@ -23,6 +23,7 @@ public class ShootableNote : MonoBehaviour
     [SerializeField] private Renderer rend;
     [SerializeField] private Color perfectColor = Color.green;
     [SerializeField] private Color earlyColor = Color.yellow;
+    [SerializeField] private Color missColor = Color.red; //  NEW
     [SerializeField] private float flashDuration = 0.15f;
 
     private Color originalColor;
@@ -46,7 +47,6 @@ public class ShootableNote : MonoBehaviour
             rend = GetComponent<Renderer>();
 
         rend.material = new Material(rend.material);
-
         originalColor = rend.material.color;
     }
 
@@ -76,14 +76,24 @@ public class ShootableNote : MonoBehaviour
     {
         if (finished) return false;
 
+        float distToTarget = Mathf.Abs(transform.position.x - targetX);
+
+        //  PERFECT HIT
         if (canHit)
         {
             Success();
             return true;
         }
 
-        ShowColor(earlyColor);
+        //  TOO FAR  treat as miss
+        if (distToTarget > hitWindow)
+        {
+            MissByShot();
+            return false;
+        }
 
+        //  EARLY HIT
+        ShowColor(earlyColor);
         return false;
     }
 
@@ -93,7 +103,6 @@ public class ShootableNote : MonoBehaviour
         active = false;
 
         ShowColor(perfectColor);
-
         OnNoteHit?.Invoke(transform.position);
 
         StartCoroutine(ReturnAfterFlash());
@@ -109,6 +118,20 @@ public class ShootableNote : MonoBehaviour
         OnNoteMiss?.Invoke(transform.position);
 
         NotePool.Instance.ReturnNote(gameObject);
+    }
+
+    //  NEW: Shot miss (from afar)
+    private void MissByShot()
+    {
+        if (finished) return;
+
+        finished = true;
+        active = false;
+
+        ShowColor(missColor);
+        OnNoteMiss?.Invoke(transform.position);
+
+        StartCoroutine(ReturnAfterFlash());
     }
 
     private void ShowColor(Color color)
