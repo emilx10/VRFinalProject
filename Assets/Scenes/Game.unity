@@ -4405,7 +4405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6900982bbec2494c9985f1de9dd4254, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NoteManager
-  map: {fileID: 11400000, guid: 8dfe264bcfa44424a86057bc5503ba2a, type: 2}
+  map: {fileID: 11400000, guid: 6c5142b32389d9e47b403ba06a369857, type: 2}
   music: {fileID: 730218074}
   spawnPoint: {fileID: 1609646176}
   hitPoint: {fileID: 1524417842}
@@ -4455,7 +4455,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 9c8f9ca04135d0248862a0b57dcfbbb0, type: 3}
+  m_Resource: {fileID: 8300000, guid: d87030ec7becf534a8eaf9e86bb08da4, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
