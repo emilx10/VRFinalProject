@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using System.Collections;
 
 public class ShootableNote : MonoBehaviour
 {
@@ -15,8 +16,16 @@ public class ShootableNote : MonoBehaviour
     private bool finished;
 
     [Header("Rhythm Window Settings")]
-    [SerializeField] private float hitWindow = 1.2f; // The "Big Area" on X axis for success
-    [SerializeField] private float missBuffer = 1.0f; // Distance past target to fail
+    [SerializeField] private float hitWindow = 1.2f;
+    [SerializeField] private float missBuffer = 1.0f;
+
+    [Header("Visuals")]
+    [SerializeField] private Renderer rend;
+    [SerializeField] private Color perfectColor = Color.green;
+    [SerializeField] private Color earlyColor = Color.yellow;
+    [SerializeField] private float flashDuration = 0.15f;
+
+    private Color originalColor;
 
     public void Init(float moveSpeed, float targetPosX)
     {
@@ -27,34 +36,42 @@ public class ShootableNote : MonoBehaviour
         active = true;
         canHit = false;
         finished = false;
+
+        ResetVisual();
+    }
+
+    private void Awake()
+    {
+        if (rend == null)
+            rend = GetComponent<Renderer>();
+
+        rend.material = new Material(rend.material);
+
+        originalColor = rend.material.color;
     }
 
     private void Update()
     {
         if (!active || finished) return;
 
-        // Move ONLY on X, preserving the random Z set by NoteManager
         float direction = (targetX > startX) ? 1 : -1;
         float moveAmount = speed * Time.deltaTime * direction;
-        
+
         transform.Translate(Vector3.right * moveAmount, Space.World);
 
-        // Check if we are inside the Success Window
         float distToTarget = Mathf.Abs(transform.position.x - targetX);
         canHit = (distToTarget <= hitWindow);
 
-        // Check for Miss (Passing the target)
-        if (startX < targetX) // Moving Right
+        if (startX < targetX)
         {
             if (transform.position.x > targetX + missBuffer) Miss();
         }
-        else // Moving Left
+        else
         {
             if (transform.position.x < targetX - missBuffer) Miss();
         }
     }
 
-    // This is called by the Raycaster
     public bool TryHit()
     {
         if (finished) return false;
@@ -65,24 +82,57 @@ public class ShootableNote : MonoBehaviour
             return true;
         }
 
-        // If hit but canHit is false, it was too early or too late
-        return false; 
+        ShowColor(earlyColor);
+
+        return false;
     }
 
     private void Success()
     {
         finished = true;
         active = false;
+
+        ShowColor(perfectColor);
+
         OnNoteHit?.Invoke(transform.position);
-        NotePool.Instance.ReturnNote(gameObject);
+
+        StartCoroutine(ReturnAfterFlash());
     }
 
     private void Miss()
     {
         if (finished) return;
+
         finished = true;
         active = false;
+
         OnNoteMiss?.Invoke(transform.position);
+
         NotePool.Instance.ReturnNote(gameObject);
+    }
+
+    private void ShowColor(Color color)
+    {
+        StopAllCoroutines();
+        StartCoroutine(FlashColor(color));
+    }
+
+    private IEnumerator FlashColor(Color color)
+    {
+        rend.material.color = color;
+        yield return new WaitForSeconds(flashDuration);
+        rend.material.color = originalColor;
+    }
+
+    private IEnumerator ReturnAfterFlash()
+    {
+        yield return new WaitForSeconds(flashDuration);
+        NotePool.Instance.ReturnNote(gameObject);
+    }
+
+    private void ResetVisual()
+    {
+        if (rend != null)
+            rend.material.color = originalColor;
     }
 }

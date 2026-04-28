@@ -113,4 +113,8 @@ public class GlassRaycaster : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawRay(rayOrigin.position, rayOrigin.forward * rayDistance);
     }
+
+    public int CurrentAmmo => currentAmmo;
+    public int MagazineSize => magazineSize;
+    public bool IsReloading => isReloading;
 }

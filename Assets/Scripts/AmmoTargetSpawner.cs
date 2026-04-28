@@ -7,8 +7,9 @@ public class AmmoTargetSpawner : MonoBehaviour
     [Header("Prefab")]
     [SerializeField] private GameObject ammoPrefab;
 
-    [Header("Reference Cube")]
-    [SerializeField] private Transform referenceCube;
+    [Header("Spawn Points (ONLY THESE 2)")]
+    [SerializeField] private Transform spawnPointA;
+    [SerializeField] private Transform spawnPointB;
 
     [Header("Pool")]
     [SerializeField] private int poolSize = 5;
@@ -16,10 +17,6 @@ public class AmmoTargetSpawner : MonoBehaviour
     [Header("Spawn Timing")]
     [SerializeField] private float spawnInterval = 2f;
     [SerializeField] private float targetLifetime = 3f;
-
-    [Header("Z Range (LOCAL SPACE)")]
-    [SerializeField] private float minZ = -5.9f;
-    [SerializeField] private float maxZ = 4.9f;
 
     private List<GameObject> pool = new List<GameObject>();
 
@@ -46,23 +43,17 @@ public class AmmoTargetSpawner : MonoBehaviour
 
     private void Spawn()
     {
-        if (referenceCube == null) return;
+        if (spawnPointA == null || spawnPointB == null) return;
 
         GameObject obj = GetFromPool();
         if (obj == null) return;
 
-        //  random Z between your values
-        float randomZ = Random.Range(minZ, maxZ);
+        //  pick one of the two points
+        Transform chosenPoint = Random.value < 0.5f ? spawnPointA : spawnPointB;
 
-        //  build position in LOCAL cube space
-        Vector3 localOffset = new Vector3(0f, 0f, randomZ);
+        obj.transform.position = chosenPoint.position;
+        obj.transform.rotation = chosenPoint.rotation; // optional
 
-        //  convert to world space using cube transform
-        Vector3 spawnPos =
-            referenceCube.position +
-            referenceCube.TransformDirection(localOffset);
-
-        obj.transform.position = spawnPos;
         obj.SetActive(true);
 
         StartCoroutine(DisableAfterTime(obj, targetLifetime));
